@@ -41,8 +41,15 @@ export function createWebhookJobId(input: {
 export function createFollowupJobId(input: {
   tenantId: string;
   patientId: string;
+  appointmentId?: string;
   sequenceDay: number;
+  category?: string;
 }) {
-  return createIdempotencyKey("followup", [input.tenantId, input.patientId, input.sequenceDay]);
+  return createIdempotencyKey("followup", [
+    input.tenantId,
+    input.patientId,
+    input.appointmentId ?? "patient",
+    input.sequenceDay,
+    input.category ?? "general"
+  ]);
 }
-

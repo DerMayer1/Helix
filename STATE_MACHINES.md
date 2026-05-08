@@ -1,6 +1,6 @@
 # State Machines - CareLoop
 
-Status: Phase 1 baseline  
+Status: Phase 5 retention workflow
 Owner: backend architecture
 
 This document defines the initial workflow state machines required before implementing the lifecycle.
@@ -57,12 +57,36 @@ States:
 
 Queue jobs must use stable idempotency keys, bounded retries, backoff, and structured failure logs.
 
-Phase 3 queue contracts:
+Phase 5 queue contracts:
 - reminders use appointment and offset identity
 - recovery jobs use appointment and attempt identity
-- follow-up jobs use patient and sequence-day identity
+- follow-up jobs use patient, appointment when available, sequence-day, and category identity
 - webhook jobs use subscription and event identity
 - realtime jobs use event identity
+
+## Retention Lifecycle
+
+Retention-positive states are modeled through events rather than a separate patient status table in the current implementation.
+
+Retention signals:
+- `consultation.completed` schedules post-care follow-up.
+- `prescription.expiring` schedules renewal outreach.
+- `prescription.renewed` records a renewal-positive event.
+- `patient.returned` records a return visit or equivalent retention outcome.
+- `ltv.updated` persists the updated LTV calculation.
+
+Every retention-positive write must:
+- validate tenant access
+- create an audit log
+- update engagement score
+- emit the domain event
+- emit `state.changed` when the patient or appointment state changes
+
+Implementation purpose:
+- Appointment state tracks clinical/operational progress.
+- Recovery state tracks whether failed confirmation was recovered, exhausted, or still in progress.
+- Retention events track downstream value creation without adding premature patient-status tables.
+- Queue state tracks work that has been scheduled but not yet executed.
 
 ## Webhook Delivery Lifecycle
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { scheduleRecoveryJob, scheduleReminderJob, scheduleWebhookJob } from "./scheduler";
+import { scheduleFollowupJob, scheduleRecoveryJob, scheduleReminderJob, scheduleWebhookJob } from "./scheduler";
 
 const base = {
   tenantId: "00000000-0000-4000-8000-000000000001",
@@ -45,6 +45,22 @@ describe("queue scheduler", () => {
     });
   });
 
+  it("schedules follow-up jobs with appointment-scoped ids", async () => {
+    const queue = createQueue();
+    await scheduleFollowupJob({
+      ...base,
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      patientId: "00000000-0000-4000-8000-000000000020",
+      sequenceDay: 7,
+      category: "wellness_check",
+      scheduledFor: new Date(Date.now() + 60_000)
+    }, queue);
+
+    expect(queue.add.mock.calls[0]?.[2]).toMatchObject({
+      jobId: "followup:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000020:00000000-0000-4000-8000-000000000030:7:wellness_check"
+    });
+  });
+
   it("schedules webhook jobs with stronger retry defaults", async () => {
     const queue = createQueue();
     await scheduleWebhookJob({
@@ -62,4 +78,3 @@ describe("queue scheduler", () => {
     });
   });
 });
-

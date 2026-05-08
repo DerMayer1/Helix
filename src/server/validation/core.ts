@@ -74,6 +74,31 @@ export const upsertLtvRecordSchema = z.object({
   renewalValue: z.number().min(0)
 });
 
+export const scheduleRecoveryAttemptSchema = z.object({
+  appointmentId: z.string().uuid(),
+  attempt: z.number().int().min(1).max(10),
+  reason: z.enum(["unconfirmed", "no_show"]).default("unconfirmed")
+});
+
+export const recoveryOutcomeSchema = z.object({
+  appointmentId: z.string().uuid(),
+  outcomeReason: z.string().min(1).max(120).default("workflow_transition")
+});
+
+export const completeConsultationSchema = z.object({
+  appointmentId: z.string().uuid(),
+  postCareDays: z.array(z.number().int().min(1).max(365)).min(1).default([1, 7, 30])
+});
+
+export const prescriptionRenewalSignalSchema = z.object({
+  patientId: z.string().uuid(),
+  sequenceDay: z.number().int().min(1).max(365).default(1)
+});
+
+export const patientReturnedSchema = upsertLtvRecordSchema.extend({
+  source: z.enum(["return_visit", "prescription_renewal", "postcare_engagement"]).default("return_visit")
+});
+
 export type CreateTenantInput = z.input<typeof createTenantSchema>;
 export type CreateUserInput = z.input<typeof createUserSchema>;
 export type CreatePatientInput = z.input<typeof createPatientSchema>;
@@ -84,3 +109,8 @@ export type RecordLifecycleEventInput = z.input<typeof recordLifecycleEventSchem
 export type RecordAuditLogInput = z.input<typeof recordAuditLogSchema>;
 export type UpsertEngagementScoreInput = z.input<typeof upsertEngagementScoreSchema>;
 export type UpsertLtvRecordInput = z.input<typeof upsertLtvRecordSchema>;
+export type ScheduleRecoveryAttemptInput = z.input<typeof scheduleRecoveryAttemptSchema>;
+export type RecoveryOutcomeInput = z.input<typeof recoveryOutcomeSchema>;
+export type CompleteConsultationInput = z.input<typeof completeConsultationSchema>;
+export type PrescriptionRenewalSignalInput = z.input<typeof prescriptionRenewalSignalSchema>;
+export type PatientReturnedInput = z.input<typeof patientReturnedSchema>;

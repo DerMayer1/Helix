@@ -24,7 +24,8 @@ export const followupJobSchema = baseJobSchema.extend({
   patientId: z.string().uuid(),
   appointmentId: z.string().uuid().optional(),
   sequenceDay: z.number().int().min(1).max(365),
-  category: z.enum(["wellness_check", "satisfaction", "prescription", "exam", "re_engagement"])
+  category: z.enum(["wellness_check", "satisfaction", "prescription", "exam", "re_engagement"]),
+  scheduledFor: z.coerce.date()
 });
 
 export const engagementAnalysisJobSchema = baseJobSchema.extend({
@@ -61,4 +62,3 @@ export type CareLoopJobData =
   | EngagementAnalysisJobData
   | RealtimeEventJobData
   | WebhookJobData;
-

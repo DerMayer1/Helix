@@ -1,6 +1,6 @@
 # Event System - CareLoop
 
-Status: Phase 1 baseline  
+Status: Phase 5 retention workflow
 Owner: backend architecture
 
 CareLoop is event-driven. Every business state transition emits `state.changed` and may emit a domain-specific event.
@@ -72,3 +72,24 @@ Event consumers must:
 Outbound webhook jobs must use minimized payload envelopes and deterministic job IDs based on tenant, subscription, and event identity.
 
 Phase 3 persists lifecycle events before queue fanout. Downstream queue jobs are retryable and idempotent, but delivery-attempt persistence remains a later hardening task.
+
+## Phase 5 Retention Events
+
+Recovery metrics are derived from discrete recovery events:
+- `recovery.attempted` is emitted for each recovery outreach action.
+- `recovery.succeeded` is emitted when the recovery path confirms, reschedules, or returns the patient.
+- `recovery.failed` is emitted when the configured recovery sequence is exhausted without success.
+
+Post-care and retention events are executable workflow outputs:
+- `consultation.completed` transitions an appointment to completed.
+- `postcare.sequence_scheduled` records the post-care follow-up plan.
+- `prescription.expiring` schedules prescription renewal outreach.
+- `prescription.renewed`, `patient.returned`, and `ltv.updated` record retention-positive outcomes.
+
+Phase 5 event payloads remain tenant-scoped and PHI-minimized. Events identify patients and appointments by IDs only; no medical notes, histories, contact data, or raw clinical content is emitted.
+
+Operational purpose:
+- Recovery events are analytics primitives, not just notification messages.
+- `queue.job_scheduled` links workflow decisions to BullMQ visibility.
+- `state.changed` remains the lifecycle-wide integration event for dashboards and outbound webhooks.
+- Retention-positive events make LTV explainable because every metric change can be traced back to a patient return, prescription renewal, or completed consultation.

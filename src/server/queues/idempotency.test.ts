@@ -37,12 +37,13 @@ describe("queue idempotency keys", () => {
     })).toBe("webhook:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000040:00000000-0000-4000-8000-000000000050");
   });
 
-  it("creates follow-up ids by patient and sequence day", () => {
+  it("creates follow-up ids by patient, appointment, sequence day, and category", () => {
     expect(createFollowupJobId({
       tenantId: "00000000-0000-4000-8000-000000000001",
       patientId: "00000000-0000-4000-8000-000000000020",
-      sequenceDay: 7
-    })).toContain(":7");
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      sequenceDay: 7,
+      category: "wellness_check"
+    })).toBe("followup:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000020:00000000-0000-4000-8000-000000000030:7:wellness_check");
   });
 });
-

@@ -66,6 +66,7 @@ export function scheduleRecoveryJob(
 ) {
   const parsed = recoveryJobSchema.parse(data);
   return scheduleJob(queue, "recovery.attempt", parsed, {
+    delay: 0,
     jobId: createRecoveryJobId(parsed)
   });
 }
@@ -76,7 +77,8 @@ export function scheduleFollowupJob(
 ) {
   const parsed = followupJobSchema.parse(data);
   return scheduleJob(queue, "followup.send", parsed, {
-    jobId: createFollowupJobId(parsed)
+    jobId: createFollowupJobId(parsed),
+    delay: Math.max(parsed.scheduledFor.getTime() - Date.now(), 0)
   });
 }
 

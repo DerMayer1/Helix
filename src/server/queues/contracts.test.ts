@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  followupJobSchema,
   recoveryJobSchema,
   reminderJobSchema,
   webhookJobSchema
@@ -33,6 +34,19 @@ describe("queue payload contracts", () => {
     })).toThrow();
   });
 
+  it("validates follow-up jobs and coerces scheduled dates", () => {
+    const parsed = followupJobSchema.parse({
+      ...base,
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      patientId: "00000000-0000-4000-8000-000000000020",
+      sequenceDay: 7,
+      category: "wellness_check",
+      scheduledFor: "2026-05-17T14:00:00.000Z"
+    });
+
+    expect(parsed.scheduledFor).toBeInstanceOf(Date);
+  });
+
   it("validates webhook jobs with canonical event names", () => {
     const parsed = webhookJobSchema.parse({
       ...base,
@@ -46,4 +60,3 @@ describe("queue payload contracts", () => {
     expect(parsed.eventName).toBe("state.changed");
   });
 });
-

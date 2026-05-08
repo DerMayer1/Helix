@@ -11,6 +11,7 @@ Implemented stages:
 - Phase 2: multi-tenant data core.
 - Phase 3: event and queue orchestration foundation.
 - Phase 4: appointment and reminder lifecycle.
+- Phase 5: recovery and retention workflows.
 
 Required verification:
 - `npm install`
@@ -101,9 +102,17 @@ Phase 4 established:
 - Reminder planning for the canonical `48h`, `24h`, `2h`, and `30m` offsets, with stale reminders skipped.
 - Tests proving the Phase 4 lifecycle behavior and cross-tenant fanout rejection.
 
+Phase 5 established:
+- Recovery attempts that schedule deterministic BullMQ jobs and emit `recovery.attempted`.
+- Recovery success/failure outcomes that emit `recovery.succeeded` or `recovery.failed`, transition appointment state, write audit logs, and update engagement score.
+- Consultation completion that emits `consultation.completed`, schedules post-care follow-ups, emits `postcare.sequence_scheduled`, and records state/audit history.
+- Prescription renewal monitoring that emits `prescription.expiring` and schedules prescription follow-up jobs.
+- Patient return tracking that emits `patient.returned`, updates LTV, emits `ltv.updated`, and records retention-positive state.
+- Tests proving recovery metrics, post-care scheduling, prescription monitoring, LTV update behavior, and cross-tenant fanout rejection.
+
 ## API Surface
 
-Phase 4 exposes the first executable product workflow through Next.js Route Handlers:
+The executable workflow is exposed through Next.js Route Handlers:
 
 ```text
 GET  /api/automation-rules
@@ -114,10 +123,35 @@ GET  /api/appointments
 POST /api/appointments
 POST /api/appointments/:id/confirm
 POST /api/appointments/:id/unresponsive
+POST /api/appointments/:id/complete
+POST /api/recovery/:appointmentId/attempt
+POST /api/recovery/:appointmentId/succeed
+POST /api/recovery/:appointmentId/fail
+POST /api/patients/:id/prescription-expiring
+POST /api/patients/:id/return
 GET  /api/queues/visibility
 ```
 
 These endpoints use server-side tenant context. Clients do not provide or control `tenantId`.
+
+## Retention Workflow Map
+
+Phase 5 turns retention into measurable backend behavior rather than a dashboard-only metric.
+
+Core functions:
+- `scheduleRecoveryAttemptLifecycle` schedules a deterministic recovery job, emits `recovery.attempted`, writes audit history, and moves engagement risk higher.
+- `markRecoverySucceededLifecycle` records that recovery worked, transitions the appointment to `confirmed/succeeded`, emits `recovery.succeeded` and `state.changed`, and improves engagement score.
+- `markRecoveryFailedLifecycle` records an exhausted recovery path, transitions the appointment to `no_show/failed`, emits `recovery.failed` and `state.changed`, and preserves the failure as an auditable metric.
+- `completeConsultationLifecycle` transitions the appointment to `completed`, emits `consultation.completed`, schedules post-care follow-ups, emits `postcare.sequence_scheduled`, and updates engagement.
+- `monitorPrescriptionRenewalLifecycle` turns a renewal risk into a scheduled prescription follow-up and emits `prescription.expiring`.
+- `recordPatientReturnedLifecycle` records a retention-positive outcome, updates LTV using the canonical formula, emits `patient.returned` and `ltv.updated`, and moves the patient to a retained engagement state.
+
+Purpose:
+- Recovery rate is now computable from `recovery.attempted`, `recovery.succeeded`, and `recovery.failed`.
+- Post-care work is queue-backed and idempotent instead of being implied by UI state.
+- Prescription renewal is represented as a workflow signal, not a free-form note.
+- LTV changes are tied to explicit return or renewal events.
+- Every workflow is tenant-scoped, audit-backed, event-driven, and PHI-minimized.
 
 ## Event Vocabulary
 
@@ -215,6 +249,7 @@ src/server/fixtures      Synthetic local/test data
 src/server/observability Structured logging utilities
 src/server/queues        BullMQ contracts, scheduling, visibility, processors
 src/server/repositories  Tenant-scoped data access
+src/server/retention     Recovery, post-care, prescription renewal, return, and LTV workflows
 src/server/tenant        Tenant context and isolation helpers
 src/server/validation    Zod input contracts
 src/server/webhooks      Webhook envelopes and HMAC signing
@@ -222,13 +257,13 @@ src/server/webhooks      Webhook envelopes and HMAC signing
 
 ## Technical Comment
 
-The first four phases intentionally separate domain safety from workflow execution. Phase 2 makes tenant context and validation unavoidable before data access. Phase 3 places orchestration on top of that boundary through typed events, deterministic queue IDs, and signed webhook envelopes. Phase 4 connects that foundation to the first real product workflow: appointment booking, reminder scheduling, confirmation, recovery entrypoint, audit logs, and engagement scoring. This prevents the common failure mode where queue workers, route handlers, and webhook dispatchers become parallel, less-secure paths around the main authorization and tenant-isolation model.
+The first five phases intentionally separate domain safety from workflow execution. Phase 2 makes tenant context and validation unavoidable before data access. Phase 3 places orchestration on top of that boundary through typed events, deterministic queue IDs, and signed webhook envelopes. Phase 4 connects that foundation to appointment booking, reminder scheduling, confirmation, recovery entrypoint, audit logs, and engagement scoring. Phase 5 makes retention measurable by turning recovery attempts, recovery outcomes, post-care scheduling, prescription renewal, patient return, and LTV updates into explicit events and audit trails. This prevents the common failure mode where queue workers, route handlers, and webhook dispatchers become parallel, less-secure paths around the main authorization and tenant-isolation model.
 
 ## Next Phase
 
-Phase 5 should deepen retention behavior:
-- Recovery attempts with success/failure outcomes.
-- Recovery rate analytics from discrete recovery events.
-- Post-care follow-up scheduling.
-- Prescription renewal monitoring.
-- LTV updates from return visits and retention-positive events.
+Phase 6 should implement the AI clinical context layer:
+- Doctor-facing consultation context generation.
+- AI-assistive-only summaries with no diagnosis, prescribing, or irreversible actions.
+- PHI-minimized context boundaries.
+- AI fallback behavior and audit logs.
+- Tests for prompt/context construction and safe failure behavior.
