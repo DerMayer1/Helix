@@ -3,6 +3,7 @@ import {
   createAppointmentSchema,
   createAutomationRuleSchema,
   recordLifecycleEventSchema,
+  transitionAppointmentSchema,
   upsertLtvRecordSchema
 } from "./core";
 
@@ -40,6 +41,12 @@ describe("core validation schemas", () => {
     expect(parsed.name).toBe("recovery.succeeded");
   });
 
+  it("requires an explicit appointment transition field", () => {
+    expect(() => transitionAppointmentSchema.parse({
+      appointmentId: "00000000-0000-4000-8000-000000000030"
+    })).toThrow("At least one appointment state field must be provided.");
+  });
+
   it("rejects negative LTV inputs", () => {
     expect(() => upsertLtvRecordSchema.parse({
       patientId: "00000000-0000-4000-8000-000000000020",
@@ -50,4 +57,3 @@ describe("core validation schemas", () => {
     })).toThrow();
   });
 });
-

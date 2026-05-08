@@ -10,6 +10,7 @@ import {
   createUserSchema,
   recordAuditLogSchema,
   recordLifecycleEventSchema,
+  transitionAppointmentSchema,
   upsertEngagementScoreSchema,
   upsertLtvRecordSchema,
   type CreateAppointmentInput,
@@ -19,6 +20,7 @@ import {
   type CreateUserInput,
   type RecordAuditLogInput,
   type RecordLifecycleEventInput,
+  type TransitionAppointmentInput,
   type UpsertEngagementScoreInput,
   type UpsertLtvRecordInput
 } from "@/server/validation/core";
@@ -70,6 +72,23 @@ export async function listPatients(db: CareLoopDb, context: TenantContext) {
     .orderBy(desc(schema.patients.createdAt));
 }
 
+export async function getPatientById(
+  db: CareLoopDb,
+  context: TenantContext,
+  patientId: string
+) {
+  const [patient] = await db
+    .select()
+    .from(schema.patients)
+    .where(and(
+      eq(schema.patients.tenantId, context.tenantId),
+      eq(schema.patients.id, patientId)
+    ))
+    .limit(1);
+
+  return patient ?? null;
+}
+
 export async function createAutomationRule(
   db: CareLoopDb,
   context: TenantContext,
@@ -97,6 +116,12 @@ export async function createAppointment(
   input: CreateAppointmentInput
 ) {
   const parsed = createAppointmentSchema.parse(input);
+  const patient = await getPatientById(db, context, parsed.patientId);
+
+  if (!patient) {
+    throw new Error("Tenant-scoped patient not found.");
+  }
+
   const [appointment] = await db.insert(schema.appointments).values({
     ...parsed,
     tenantId: context.tenantId
@@ -127,6 +152,37 @@ export async function getAppointmentById(
     .limit(1);
 
   return appointment ?? null;
+}
+
+export async function transitionAppointment(
+  db: CareLoopDb,
+  context: TenantContext,
+  input: TransitionAppointmentInput
+) {
+  const parsed = transitionAppointmentSchema.parse(input);
+  const current = await getAppointmentById(db, context, parsed.appointmentId);
+
+  if (!current) {
+    throw new Error("Tenant-scoped appointment not found.");
+  }
+
+  const [appointment] = await db
+    .update(schema.appointments)
+    .set({
+      ...(parsed.status ? { status: parsed.status } : {}),
+      ...(parsed.recoveryStatus ? { recoveryStatus: parsed.recoveryStatus } : {}),
+      updatedAt: new Date()
+    })
+    .where(and(
+      eq(schema.appointments.tenantId, context.tenantId),
+      eq(schema.appointments.id, parsed.appointmentId)
+    ))
+    .returning();
+
+  return {
+    previous: current,
+    appointment: requireInsertedRow(appointment, "appointment transition")
+  };
 }
 
 export async function recordLifecycleEvent(

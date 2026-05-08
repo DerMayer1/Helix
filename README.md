@@ -10,6 +10,7 @@ Implemented stages:
 - Phase 1: application foundation and architecture baseline.
 - Phase 2: multi-tenant data core.
 - Phase 3: event and queue orchestration foundation.
+- Phase 4: appointment and reminder lifecycle.
 
 Required verification:
 - `npm install`
@@ -90,6 +91,33 @@ Phase 3 established:
 - Webhook envelope minimization and HMAC signing.
 - Worker processor foundations that validate payloads before execution.
 - Tests for queue contracts, idempotency, scheduling, visibility, webhook signing, and PHI-minimized payloads.
+
+Phase 4 established:
+- Tenant-scoped route handlers for automation rules, patients, and appointments.
+- Appointment booking orchestration that persists the appointment, schedules deterministic reminder jobs, emits queue/lifecycle/state events, records audit logs, and updates engagement score.
+- Appointment creation rejects patient IDs that are not visible inside the current tenant context.
+- Confirmation workflow that performs a tenant-scoped appointment transition and emits `patient.confirmed` plus `state.changed`.
+- Unresponsive workflow entrypoint that marks recovery as `in_progress`, emits `patient.unresponsive` and `recovery.started`, records audit history, and increases churn risk.
+- Reminder planning for the canonical `48h`, `24h`, `2h`, and `30m` offsets, with stale reminders skipped.
+- Tests proving the Phase 4 lifecycle behavior and cross-tenant fanout rejection.
+
+## API Surface
+
+Phase 4 exposes the first executable product workflow through Next.js Route Handlers:
+
+```text
+GET  /api/automation-rules
+POST /api/automation-rules
+GET  /api/patients
+POST /api/patients
+GET  /api/appointments
+POST /api/appointments
+POST /api/appointments/:id/confirm
+POST /api/appointments/:id/unresponsive
+GET  /api/queues/visibility
+```
+
+These endpoints use server-side tenant context. Clients do not provide or control `tenantId`.
 
 ## Event Vocabulary
 
@@ -179,6 +207,7 @@ Use atomic, descriptive commits following Conventional Commits. See `CONTRIBUTIN
 ```text
 src/app                  Next.js App Router shell
 src/domain               Pure domain contracts and calculations
+src/server/appointments  Appointment booking, reminder planning, and lifecycle transitions
 src/server/auth          Mocked tenant auth foundation
 src/server/db            Drizzle schema and database client
 src/server/events        Lifecycle event emitters
@@ -193,14 +222,13 @@ src/server/webhooks      Webhook envelopes and HMAC signing
 
 ## Technical Comment
 
-The first three phases intentionally separate domain safety from workflow execution. Phase 2 makes tenant context and validation unavoidable before data access. Phase 3 then places orchestration on top of that boundary through typed events, deterministic queue IDs, and signed webhook envelopes. This prevents the common failure mode where queue workers and webhook dispatchers become parallel, less-secure paths around the main authorization and tenant-isolation model.
+The first four phases intentionally separate domain safety from workflow execution. Phase 2 makes tenant context and validation unavoidable before data access. Phase 3 places orchestration on top of that boundary through typed events, deterministic queue IDs, and signed webhook envelopes. Phase 4 connects that foundation to the first real product workflow: appointment booking, reminder scheduling, confirmation, recovery entrypoint, audit logs, and engagement scoring. This prevents the common failure mode where queue workers, route handlers, and webhook dispatchers become parallel, less-secure paths around the main authorization and tenant-isolation model.
 
 ## Next Phase
 
-Phase 4 should implement the first complete product workflow:
-- Tenant configures automation rules.
-- Patient appointment is created.
-- Reminder jobs are scheduled.
-- Queue state appears in the dashboard.
-- Patient confirmation or non-response drives the next state transition.
-- Lifecycle events and webhooks are emitted from real application behavior.
+Phase 5 should deepen retention behavior:
+- Recovery attempts with success/failure outcomes.
+- Recovery rate analytics from discrete recovery events.
+- Post-care follow-up scheduling.
+- Prescription renewal monitoring.
+- LTV updates from return visits and retention-positive events.

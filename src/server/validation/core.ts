@@ -33,6 +33,14 @@ export const createAppointmentSchema = z.object({
   scheduledAt: z.coerce.date()
 });
 
+export const transitionAppointmentSchema = z.object({
+  appointmentId: z.string().uuid(),
+  status: z.enum(["booked", "confirmed", "completed", "cancelled", "no_show"]).optional(),
+  recoveryStatus: z.enum(["not_started", "in_progress", "succeeded", "failed"]).optional()
+}).refine((value) => value.status || value.recoveryStatus, {
+  message: "At least one appointment state field must be provided."
+});
+
 export const recordLifecycleEventSchema = z.object({
   name: z.enum(canonicalLifecycleEvents),
   entityType: z.string().min(1).max(80),
@@ -71,6 +79,7 @@ export type CreateUserInput = z.input<typeof createUserSchema>;
 export type CreatePatientInput = z.input<typeof createPatientSchema>;
 export type CreateAutomationRuleInput = z.input<typeof createAutomationRuleSchema>;
 export type CreateAppointmentInput = z.input<typeof createAppointmentSchema>;
+export type TransitionAppointmentInput = z.input<typeof transitionAppointmentSchema>;
 export type RecordLifecycleEventInput = z.input<typeof recordLifecycleEventSchema>;
 export type RecordAuditLogInput = z.input<typeof recordAuditLogSchema>;
 export type UpsertEngagementScoreInput = z.input<typeof upsertEngagementScoreSchema>;

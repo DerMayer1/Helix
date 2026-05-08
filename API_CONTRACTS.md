@@ -1,6 +1,6 @@
 # API Contracts - CareLoop
 
-Status: Phase 1 baseline  
+Status: Phase 4 executable workflow
 Owner: backend architecture
 
 This document defines the initial API surface expected by the MVP.
@@ -28,6 +28,19 @@ Expected routes:
 - `POST /api/automation-rules`
 - `PATCH /api/automation-rules/:id`
 
+Implemented in Phase 4:
+- `GET /api/automation-rules`
+- `POST /api/automation-rules`
+
+### Patients
+
+Purpose:
+- create and list tenant-scoped synthetic patient records for appointment lifecycle execution
+
+Implemented in Phase 4:
+- `GET /api/patients`
+- `POST /api/patients`
+
 ### Appointments
 
 Purpose:
@@ -39,8 +52,23 @@ Expected routes:
 - `POST /api/appointments/:id/confirm`
 - `POST /api/appointments/:id/complete`
 - `POST /api/appointments/:id/no-show`
+- `POST /api/appointments/:id/unresponsive`
 
 Appointment writes must create or reference audit logs and lifecycle events through tenant-scoped repository functions.
+
+Implemented in Phase 4:
+- `GET /api/appointments`
+- `POST /api/appointments`
+- `POST /api/appointments/:id/confirm`
+- `POST /api/appointments/:id/unresponsive`
+
+`POST /api/appointments` must persist the appointment, schedule reminder jobs, emit `queue.job_scheduled`, `appointment.booked`, and `state.changed`, write audit logs, and update engagement score.
+
+Appointment creation must reject any `patientId` that is not visible inside the current server-side tenant context.
+
+`POST /api/appointments/:id/confirm` must perform a tenant-scoped transition to `confirmed`, emit `patient.confirmed` and `state.changed`, write an audit log, and update engagement score.
+
+`POST /api/appointments/:id/unresponsive` must set recovery status to `in_progress`, emit `patient.unresponsive`, `recovery.started`, and `state.changed`, write an audit log, and update engagement score.
 
 ### Recovery
 
@@ -61,8 +89,12 @@ Purpose:
 Expected routes:
 - `GET /api/realtime/metrics`
 - `GET /api/realtime/events`
+- `GET /api/queues/visibility`
 
 Realtime queue visibility must expose waiting, active, delayed, completed, failed, and paused counts for each core queue.
+
+Implemented in Phase 4:
+- `GET /api/queues/visibility`
 
 ### LTV Metrics
 
