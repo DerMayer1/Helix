@@ -4,7 +4,7 @@
 
 Helix is a multi-tenant healthcare retention orchestration platform. It models patient engagement as an event-driven backend system: appointment booking, reminders, recovery workflows, post-care follow-up, prescription renewal, engagement scoring, LTV tracking, realtime dashboard updates, and tenant-scoped webhook dispatch.
 
-The project is backend-first. The goal is to prove production-style architecture for healthcare SaaS workflows: tenant isolation, deterministic queues, typed events, auditability, PHI-minimized payloads, and operational lifecycle state.
+The project is backend-first with a visible operational dashboard. The goal is to prove production-style architecture for healthcare SaaS workflows: tenant isolation, deterministic queues, typed events, auditability, PHI-minimized payloads, and operational lifecycle state.
 
 ## 2. Core workflow
 
@@ -164,6 +164,12 @@ Security posture:
 - AI prompts and outputs are guarded for PHI and unsafe clinical claims before persistence.
 - Webhook payloads are signed and PHI-minimized.
 - Tests, fixtures, logs, docs, screenshots, and public demos must use synthetic data.
+
+Frontend:
+- The dashboard renders a synthetic tenant snapshot from `src/server/fixtures/dashboard.ts`.
+- `GET /api/dashboard/snapshot` exposes the same PHI-free snapshot as an integration contract.
+- It shows lifecycle trace, queue visibility, recovery rate, patient risk, LTV, AI context status, and webhook delivery status.
+- Loading and error boundaries are implemented with PHI-safe messaging.
 
 ## 5. Local setup
 

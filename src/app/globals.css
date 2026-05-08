@@ -12,8 +12,8 @@
   --positive: 22 163 74;
   --warning: 202 138 4;
   --danger: 220 38 38;
-  --font-sans: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Cascadia Mono", "SFMono-Regular", ui-monospace, monospace;
+  --font-sans: "Geist", "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Cascadia Mono", "SFMono-Regular", ui-monospace, monospace;
 }
 
 * {
@@ -44,3 +44,39 @@ a {
   background: rgba(14, 116, 144, 0.18);
 }
 
+@keyframes phase-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes event-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.phase-reveal {
+  animation: phase-reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.event-marquee {
+  animation: event-marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-reveal,
+  .event-marquee {
+    animation: none;
+  }
+}

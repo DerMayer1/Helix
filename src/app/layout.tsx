@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CareLoop",
-  description: "Multi-tenant retention orchestration for healthcare teams."
+  title: "Helix",
+  description: "Multi-tenant healthcare retention orchestration cockpit."
 };
 
 export default function RootLayout({
@@ -17,4 +17,3 @@ export default function RootLayout({
     </html>
   );
 }
-
