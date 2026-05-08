@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 248 250 252;
+  --foreground: 15 23 42;
+  --muted: 100 116 139;
+  --panel: 255 255 255;
+  --border: 203 213 225;
+  --accent: 14 116 144;
+  --positive: 22 163 74;
+  --warning: 202 138 4;
+  --danger: 220 38 38;
+  --font-sans: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "SFMono-Regular", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: rgb(var(--background));
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(14, 116, 144, 0.08), transparent 280px),
+    rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(14, 116, 144, 0.18);
+}
+
