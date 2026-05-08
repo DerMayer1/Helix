@@ -11,6 +11,7 @@ Every endpoint must:
 - validate input server-side
 - validate tenant access server-side
 - validate authorization server-side
+- derive `tenant_id` from trusted server-side context
 - return typed responses
 - return explicit error shapes
 - log failures without PHI
@@ -39,6 +40,8 @@ Expected routes:
 - `POST /api/appointments/:id/complete`
 - `POST /api/appointments/:id/no-show`
 
+Appointment writes must create or reference audit logs and lifecycle events through tenant-scoped repository functions.
+
 ### Recovery
 
 Purpose:
@@ -59,6 +62,19 @@ Expected routes:
 - `GET /api/realtime/metrics`
 - `GET /api/realtime/events`
 
+Realtime queue visibility must expose waiting, active, delayed, completed, failed, and paused counts for each core queue.
+
+### LTV Metrics
+
+Purpose:
+- store and expose tenant-scoped LTV evolution using the MVP formula
+
+Expected routes:
+- `GET /api/patients/:id/ltv`
+- `PUT /api/patients/:id/ltv`
+
+The MVP formula is `LTV = (consultations_completed * avg_revenue) + (prescriptions_renewed * renewal_value)`.
+
 ### Webhooks
 
 Purpose:
@@ -70,3 +86,8 @@ Expected routes:
 
 Outbound webhooks must be HMAC-signed, idempotent, replay-safe, and PHI-minimized.
 
+Webhook headers:
+- `x-careloop-timestamp`
+- `x-careloop-signature`
+
+Webhook signatures use HMAC-SHA256 over `{timestamp}.{body}`.

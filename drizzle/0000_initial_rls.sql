@@ -1,5 +1,6 @@
 -- Phase 1 reference migration for CareLoop tenant-owned tables.
 -- Generated SQL should be reconciled with Drizzle migrations before production use.
+-- Phase 2 repository code also scopes by tenant_id server-side; RLS is the database enforcement layer.
 
 alter table users enable row level security;
 alter table patients enable row level security;

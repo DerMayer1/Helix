@@ -63,3 +63,12 @@ Event consumers must:
 - define retry and dead-letter behavior
 - log failures with structured context
 
+## Phase 3 Runtime Rules
+
+`emitLifecycleEvent` persists the domain event, schedules a realtime dashboard job, and schedules matching webhook jobs when tenant subscriptions include the emitted event name.
+
+`emitStateChanged` is the canonical helper for lifecycle-wide state change notifications.
+
+Outbound webhook jobs must use minimized payload envelopes and deterministic job IDs based on tenant, subscription, and event identity.
+
+Phase 3 persists lifecycle events before queue fanout. Downstream queue jobs are retryable and idempotent, but delivery-attempt persistence remains a later hardening task.

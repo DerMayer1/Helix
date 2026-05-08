@@ -57,6 +57,13 @@ States:
 
 Queue jobs must use stable idempotency keys, bounded retries, backoff, and structured failure logs.
 
+Phase 3 queue contracts:
+- reminders use appointment and offset identity
+- recovery jobs use appointment and attempt identity
+- follow-up jobs use patient and sequence-day identity
+- webhook jobs use subscription and event identity
+- realtime jobs use event identity
+
 ## Webhook Delivery Lifecycle
 
 States:
@@ -68,4 +75,3 @@ States:
 - `dead_lettered`
 
 Webhook payloads must be tenant-scoped, signed, idempotent, replay-safe, and PHI-minimized.
-

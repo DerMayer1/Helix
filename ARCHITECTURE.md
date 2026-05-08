@@ -26,3 +26,25 @@ CareLoop is a multi-tenant, event-driven retention orchestration system.
 
 Phase 1 establishes the project structure, documentation contracts, domain event vocabulary, data schema foundation, lazy infrastructure clients, and static application shell.
 
+## Phase 2 Deliverable
+
+Phase 2 establishes the tenant-safe data core:
+- tenant context is required for tenant-owned operations
+- mocked tenant auth provides the temporary trusted tenant context
+- Zod schemas validate core input contracts
+- repositories scope reads and writes by server-side tenant context
+- lifecycle events, audit logs, engagement scores, and LTV records have persistence paths
+- tests prove cross-tenant records are not returned or mutated
+
+## Phase 3 Deliverable
+
+Phase 3 establishes the orchestration engine:
+- lifecycle events can be persisted and mirrored into realtime queue jobs
+- webhook jobs are scheduled from tenant subscriptions
+- all queue payloads are validated with Zod contracts
+- deterministic job IDs prevent duplicate reminder, recovery, follow-up, webhook, and realtime jobs
+- queue visibility can feed dashboard metrics
+- webhook payloads are signed and PHI-minimized
+- worker processors validate job payloads before business execution
+
+Webhook delivery attempts are represented by BullMQ jobs in this phase. Durable delivery-attempt tables can be added when outbound dispatch becomes a product-facing audit surface.
