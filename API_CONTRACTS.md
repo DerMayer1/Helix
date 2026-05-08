@@ -1,6 +1,6 @@
 # API Contracts - CareLoop
 
-Status: Phase 5 retention workflow
+Status: Phase 6 AI clinical context workflow
 Owner: backend architecture
 
 This document defines the initial API surface expected by the MVP.
@@ -51,6 +51,7 @@ Expected routes:
 - `POST /api/appointments`
 - `POST /api/appointments/:id/confirm`
 - `POST /api/appointments/:id/complete`
+- `POST /api/appointments/:id/ai-context`
 - `POST /api/appointments/:id/no-show`
 - `POST /api/appointments/:id/unresponsive`
 
@@ -65,6 +66,9 @@ Implemented in Phase 4:
 Implemented in Phase 5:
 - `POST /api/appointments/:id/complete`
 
+Implemented in Phase 6:
+- `POST /api/appointments/:id/ai-context`
+
 `POST /api/appointments` must persist the appointment, schedule reminder jobs, emit `queue.job_scheduled`, `appointment.booked`, and `state.changed`, write audit logs, and update engagement score.
 
 Appointment creation must reject any `patientId` that is not visible inside the current server-side tenant context.
@@ -74,6 +78,25 @@ Appointment creation must reject any `patientId` that is not visible inside the 
 `POST /api/appointments/:id/unresponsive` must set recovery status to `in_progress`, emit `patient.unresponsive`, `recovery.started`, and `state.changed`, write an audit log, and update engagement score.
 
 `POST /api/appointments/:id/complete` must transition the appointment to `completed`, emit `consultation.completed`, schedule post-care follow-up jobs, emit `postcare.sequence_scheduled` and `state.changed`, write an audit log, and update engagement score.
+
+`POST /api/appointments/:id/ai-context` must generate or queue assistive doctor-facing context, reject cross-tenant appointments, avoid PHI-bearing prompt content, reject unsafe AI output, persist the result with safety flags, emit `consultation.context_generated` and `state.changed`, and write an audit log.
+
+### AI Clinical Context
+
+Purpose:
+- provide doctor-facing operational context without diagnosis, prescribing, dosage recommendations, or irreversible decisions
+
+Implemented in Phase 6:
+- `POST /api/appointments/:id/ai-context`
+- `workers/ai-context.worker.ts`
+
+AI context generation rules:
+- prompts must use tenant-scoped operational identifiers and lifecycle state only
+- prompts must not include contact data, medical histories, raw notes, screenshots, or public-demo data
+- output must be treated as assistive context only
+- unsafe output must be rejected and replaced with fallback context
+- provider failures must return fallback context instead of blocking the workflow
+- all persisted results must include status, source, summary, and safety flags
 
 ### Recovery
 

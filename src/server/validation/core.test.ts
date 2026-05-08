@@ -3,6 +3,8 @@ import {
   createAppointmentSchema,
   createAutomationRuleSchema,
   completeConsultationSchema,
+  aiClinicalContextResultSchema,
+  generateClinicalContextSchema,
   patientReturnedSchema,
   recordLifecycleEventSchema,
   scheduleRecoveryAttemptSchema,
@@ -78,6 +80,27 @@ describe("core validation schemas", () => {
     });
 
     expect(parsed.source).toBe("return_visit");
+  });
+
+  it("validates AI clinical context generation defaults", () => {
+    const parsed = generateClinicalContextSchema.parse({
+      appointmentId: "00000000-0000-4000-8000-000000000030"
+    });
+
+    expect(parsed.mode).toBe("pre_consultation");
+  });
+
+  it("validates persisted AI clinical context results", () => {
+    const parsed = aiClinicalContextResultSchema.parse({
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      patientId: "00000000-0000-4000-8000-000000000020",
+      status: "generated",
+      source: "guarded_ai",
+      summary: "Assistive operational context only.",
+      safetyFlags: {}
+    });
+
+    expect(parsed.status).toBe("generated");
   });
 
   it("rejects negative LTV inputs", () => {

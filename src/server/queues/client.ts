@@ -24,9 +24,9 @@ export function getCoreQueues() {
     reminders: getQueue(queueNames.reminders),
     followups: getQueue(queueNames.followups),
     recovery: getQueue(queueNames.recovery),
+    aiClinicalContext: getQueue(queueNames.aiClinicalContext),
     webhooks: getQueue(queueNames.webhooks),
     engagementAnalysis: getQueue(queueNames.engagementAnalysis),
     realtimeEvents: getQueue(queueNames.realtimeEvents)
   };
 }
-

@@ -99,6 +99,20 @@ export const patientReturnedSchema = upsertLtvRecordSchema.extend({
   source: z.enum(["return_visit", "prescription_renewal", "postcare_engagement"]).default("return_visit")
 });
 
+export const generateClinicalContextSchema = z.object({
+  appointmentId: z.string().uuid(),
+  mode: z.enum(["pre_consultation", "post_consultation"]).default("pre_consultation")
+});
+
+export const aiClinicalContextResultSchema = z.object({
+  appointmentId: z.string().uuid(),
+  patientId: z.string().uuid(),
+  status: z.enum(["generated", "fallback", "rejected"]),
+  source: z.enum(["deterministic", "guarded_ai", "fallback"]),
+  summary: z.string().min(1).max(2000),
+  safetyFlags: jsonObjectSchema
+});
+
 export type CreateTenantInput = z.input<typeof createTenantSchema>;
 export type CreateUserInput = z.input<typeof createUserSchema>;
 export type CreatePatientInput = z.input<typeof createPatientSchema>;
@@ -114,3 +128,5 @@ export type RecoveryOutcomeInput = z.input<typeof recoveryOutcomeSchema>;
 export type CompleteConsultationInput = z.input<typeof completeConsultationSchema>;
 export type PrescriptionRenewalSignalInput = z.input<typeof prescriptionRenewalSignalSchema>;
 export type PatientReturnedInput = z.input<typeof patientReturnedSchema>;
+export type GenerateClinicalContextInput = z.input<typeof generateClinicalContextSchema>;
+export type AiClinicalContextResultInput = z.input<typeof aiClinicalContextResultSchema>;

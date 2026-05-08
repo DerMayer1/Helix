@@ -45,3 +45,74 @@ export const canonicalLifecycleEvents = [
 
 export type LifecycleEventName = (typeof canonicalLifecycleEvents)[number];
 
+export type BaseLifecycleEvent<TName extends LifecycleEventName, TPayload extends object> = {
+  event: TName;
+  tenantId: string;
+  entityType: string;
+  entityId: string;
+  correlationId: string;
+  timestamp: string;
+  payload: TPayload;
+};
+
+export type AppointmentBookedEvent = BaseLifecycleEvent<"appointment.booked", {
+  patientId: string;
+  appointmentId: string;
+  scheduledAt: string;
+  remindersScheduled: number;
+}>;
+
+export type RecoveryAttemptedEvent = BaseLifecycleEvent<"recovery.attempted", {
+  patientId: string;
+  appointmentId: string;
+  attempt: number;
+  reason: "unconfirmed" | "no_show";
+}>;
+
+export type RecoverySucceededEvent = BaseLifecycleEvent<"recovery.succeeded", {
+  patientId: string;
+  appointmentId: string;
+  outcomeReason: string;
+}>;
+
+export type RecoveryFailedEvent = BaseLifecycleEvent<"recovery.failed", {
+  patientId: string;
+  appointmentId: string;
+  outcomeReason: string;
+}>;
+
+export type ConsultationContextGeneratedEvent = BaseLifecycleEvent<"consultation.context_generated", {
+  patientId: string;
+  appointmentId: string;
+  status: "generated" | "fallback" | "rejected";
+  source: "deterministic" | "guarded_ai" | "fallback";
+  safetyFlags: Record<string, unknown>;
+}>;
+
+export type PatientReturnedEvent = BaseLifecycleEvent<"patient.returned", {
+  patientId: string;
+  source: "return_visit" | "prescription_renewal" | "postcare_engagement";
+}>;
+
+export type LtvUpdatedEvent = BaseLifecycleEvent<"ltv.updated", {
+  patientId: string;
+  consultationsCompleted: number;
+  prescriptionsRenewed: number;
+  source: "return_visit" | "prescription_renewal" | "postcare_engagement";
+}>;
+
+export type StateChangedEvent = BaseLifecycleEvent<"state.changed", {
+  previousState: string | null;
+  newState: string;
+  reason: LifecycleEventName;
+}>;
+
+export type CareLoopLifecycleEvent =
+  | AppointmentBookedEvent
+  | RecoveryAttemptedEvent
+  | RecoverySucceededEvent
+  | RecoveryFailedEvent
+  | ConsultationContextGeneratedEvent
+  | PatientReturnedEvent
+  | LtvUpdatedEvent
+  | StateChangedEvent;

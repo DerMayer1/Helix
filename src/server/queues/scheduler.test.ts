@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { scheduleFollowupJob, scheduleRecoveryJob, scheduleReminderJob, scheduleWebhookJob } from "./scheduler";
+import { scheduleAiClinicalContextJob, scheduleFollowupJob, scheduleRecoveryJob, scheduleReminderJob, scheduleWebhookJob } from "./scheduler";
 
 const base = {
   tenantId: "00000000-0000-4000-8000-000000000001",
@@ -58,6 +58,20 @@ describe("queue scheduler", () => {
 
     expect(queue.add.mock.calls[0]?.[2]).toMatchObject({
       jobId: "followup:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000020:00000000-0000-4000-8000-000000000030:7:wellness_check"
+    });
+  });
+
+  it("schedules AI clinical context jobs with appointment-scoped ids", async () => {
+    const queue = createQueue();
+    await scheduleAiClinicalContextJob({
+      ...base,
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      patientId: "00000000-0000-4000-8000-000000000020",
+      mode: "pre_consultation"
+    }, queue);
+
+    expect(queue.add.mock.calls[0]?.[2]).toMatchObject({
+      jobId: "ai-context:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000030:pre_consultation"
     });
   });
 

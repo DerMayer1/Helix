@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createAiClinicalContextJobId,
   createFollowupJobId,
   createRecoveryJobId,
   createReminderJobId,
@@ -45,5 +46,13 @@ describe("queue idempotency keys", () => {
       sequenceDay: 7,
       category: "wellness_check"
     })).toBe("followup:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000020:00000000-0000-4000-8000-000000000030:7:wellness_check");
+  });
+
+  it("creates AI clinical context ids by appointment and mode", () => {
+    expect(createAiClinicalContextJobId({
+      tenantId: "00000000-0000-4000-8000-000000000001",
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      mode: "pre_consultation"
+    })).toBe("ai-context:00000000-0000-4000-8000-000000000001:00000000-0000-4000-8000-000000000030:pre_consultation");
   });
 });

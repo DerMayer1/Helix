@@ -1,6 +1,6 @@
 # Event System - CareLoop
 
-Status: Phase 5 retention workflow
+Status: Phase 6 AI clinical context workflow
 Owner: backend architecture
 
 CareLoop is event-driven. Every business state transition emits `state.changed` and may emit a domain-specific event.
@@ -93,3 +93,26 @@ Operational purpose:
 - `queue.job_scheduled` links workflow decisions to BullMQ visibility.
 - `state.changed` remains the lifecycle-wide integration event for dashboards and outbound webhooks.
 - Retention-positive events make LTV explainable because every metric change can be traced back to a patient return, prescription renewal, or completed consultation.
+
+## Phase 6 AI Events
+
+`consultation.context_generated` is emitted after AI clinical context is generated, rejected, or replaced by fallback context.
+
+AI event payloads must include:
+- `patientId`
+- `status`
+- `source`
+- `safetyFlags`
+
+AI event payloads must not include:
+- raw prompt text
+- model output beyond persisted guarded summary references
+- medical histories
+- appointment notes
+- contact data
+- screenshots or public-demo data
+
+Operational purpose:
+- AI context generation becomes auditable without making AI output authoritative.
+- `state.changed` lets the dashboard show that context was generated or safely downgraded.
+- Safety flags make fallback and rejection behavior reviewable.

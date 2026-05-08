@@ -53,3 +53,11 @@ export function createFollowupJobId(input: {
     input.category ?? "general"
   ]);
 }
+
+export function createAiClinicalContextJobId(input: {
+  tenantId: string;
+  appointmentId: string;
+  mode: string;
+}) {
+  return createIdempotencyKey("ai-context", [input.tenantId, input.appointmentId, input.mode]);
+}

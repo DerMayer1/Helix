@@ -33,6 +33,12 @@ export const engagementAnalysisJobSchema = baseJobSchema.extend({
   triggerEventName: z.enum(canonicalLifecycleEvents)
 });
 
+export const aiClinicalContextJobSchema = baseJobSchema.extend({
+  appointmentId: z.string().uuid(),
+  patientId: z.string().uuid(),
+  mode: z.enum(["pre_consultation", "post_consultation"])
+});
+
 export const realtimeEventJobSchema = baseJobSchema.extend({
   eventId: z.string().uuid(),
   eventName: z.enum(canonicalLifecycleEvents),
@@ -52,6 +58,7 @@ export type ReminderJobData = z.infer<typeof reminderJobSchema>;
 export type RecoveryJobData = z.infer<typeof recoveryJobSchema>;
 export type FollowupJobData = z.infer<typeof followupJobSchema>;
 export type EngagementAnalysisJobData = z.infer<typeof engagementAnalysisJobSchema>;
+export type AiClinicalContextJobData = z.infer<typeof aiClinicalContextJobSchema>;
 export type RealtimeEventJobData = z.infer<typeof realtimeEventJobSchema>;
 export type WebhookJobData = z.infer<typeof webhookJobSchema>;
 
@@ -60,5 +67,6 @@ export type CareLoopJobData =
   | RecoveryJobData
   | FollowupJobData
   | EngagementAnalysisJobData
+  | AiClinicalContextJobData
   | RealtimeEventJobData
   | WebhookJobData;

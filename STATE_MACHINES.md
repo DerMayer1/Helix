@@ -1,6 +1,6 @@
 # State Machines - CareLoop
 
-Status: Phase 5 retention workflow
+Status: Phase 6 AI clinical context workflow
 Owner: backend architecture
 
 This document defines the initial workflow state machines required before implementing the lifecycle.
@@ -61,6 +61,7 @@ Phase 5 queue contracts:
 - reminders use appointment and offset identity
 - recovery jobs use appointment and attempt identity
 - follow-up jobs use patient, appointment when available, sequence-day, and category identity
+- AI clinical context jobs use tenant, appointment, and mode identity
 - webhook jobs use subscription and event identity
 - realtime jobs use event identity
 
@@ -99,3 +100,24 @@ States:
 - `dead_lettered`
 
 Webhook payloads must be tenant-scoped, signed, idempotent, replay-safe, and PHI-minimized.
+
+## AI Clinical Context Lifecycle
+
+States:
+- `generated`
+- `fallback`
+- `rejected`
+
+Allowed outcomes:
+- `generated` when prompt and output pass safety checks
+- `fallback` when the provider fails or no compliant provider path is available
+- `rejected` when prompt or output safety checks fail
+
+Every AI context write must:
+- validate tenant access
+- avoid PHI-bearing prompt construction
+- reject diagnosis, prescribing, dosage, and irreversible-decision language
+- persist safety flags
+- create an audit log
+- emit `consultation.context_generated`
+- emit `state.changed`

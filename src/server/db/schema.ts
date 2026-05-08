@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -27,6 +28,12 @@ export const recoveryStatus = pgEnum("recovery_status", [
   "in_progress",
   "succeeded",
   "failed"
+]);
+
+export const aiContextStatus = pgEnum("ai_context_status", [
+  "generated",
+  "fallback",
+  "rejected"
 ]);
 
 export const tenants = pgTable("tenants", {
@@ -150,6 +157,22 @@ export const ltvRecords = pgTable("ltv_records", {
   uniqueIndex("ltv_records_tenant_patient_unique").on(table.tenantId, table.patientId)
 ]);
 
+export const aiClinicalContexts = pgTable("ai_clinical_contexts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id),
+  patientId: uuid("patient_id").notNull().references(() => patients.id),
+  status: aiContextStatus("status").notNull(),
+  source: text("source").notNull(),
+  summary: text("summary").notNull(),
+  safetyFlags: jsonb("safety_flags").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+}, (table) => [
+  index("ai_clinical_contexts_tenant_id_idx").on(table.tenantId),
+  index("ai_clinical_contexts_tenant_appointment_idx").on(table.tenantId, table.appointmentId),
+  index("ai_clinical_contexts_tenant_patient_idx").on(table.tenantId, table.patientId)
+]);
+
 export const webhookSubscriptions = pgTable("webhook_subscriptions", {
   id: uuid("id").primaryKey().defaultRandom(),
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
@@ -161,3 +184,111 @@ export const webhookSubscriptions = pgTable("webhook_subscriptions", {
 }, (table) => [
   index("webhook_subscriptions_tenant_id_idx").on(table.tenantId)
 ]);
+
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  automationRules: many(automationRules),
+  users: many(users),
+  patients: many(patients),
+  appointments: many(appointments),
+  lifecycleEvents: many(lifecycleEvents),
+  auditLogs: many(auditLogs),
+  engagementScores: many(engagementScores),
+  ltvRecords: many(ltvRecords),
+  aiClinicalContexts: many(aiClinicalContexts),
+  webhookSubscriptions: many(webhookSubscriptions)
+}));
+
+export const usersRelations = relations(users, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [users.tenantId],
+    references: [tenants.id]
+  })
+}));
+
+export const patientsRelations = relations(patients, ({ many, one }) => ({
+  tenant: one(tenants, {
+    fields: [patients.tenantId],
+    references: [tenants.id]
+  }),
+  appointments: many(appointments),
+  engagementScores: many(engagementScores),
+  ltvRecords: many(ltvRecords),
+  aiClinicalContexts: many(aiClinicalContexts)
+}));
+
+export const automationRulesRelations = relations(automationRules, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [automationRules.tenantId],
+    references: [tenants.id]
+  })
+}));
+
+export const appointmentsRelations = relations(appointments, ({ many, one }) => ({
+  tenant: one(tenants, {
+    fields: [appointments.tenantId],
+    references: [tenants.id]
+  }),
+  patient: one(patients, {
+    fields: [appointments.patientId],
+    references: [patients.id]
+  }),
+  aiClinicalContexts: many(aiClinicalContexts)
+}));
+
+export const aiClinicalContextsRelations = relations(aiClinicalContexts, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [aiClinicalContexts.tenantId],
+    references: [tenants.id]
+  }),
+  appointment: one(appointments, {
+    fields: [aiClinicalContexts.appointmentId],
+    references: [appointments.id]
+  }),
+  patient: one(patients, {
+    fields: [aiClinicalContexts.patientId],
+    references: [patients.id]
+  })
+}));
+
+export const lifecycleEventsRelations = relations(lifecycleEvents, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [lifecycleEvents.tenantId],
+    references: [tenants.id]
+  })
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [auditLogs.tenantId],
+    references: [tenants.id]
+  })
+}));
+
+export const engagementScoresRelations = relations(engagementScores, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [engagementScores.tenantId],
+    references: [tenants.id]
+  }),
+  patient: one(patients, {
+    fields: [engagementScores.patientId],
+    references: [patients.id]
+  })
+}));
+
+export const ltvRecordsRelations = relations(ltvRecords, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [ltvRecords.tenantId],
+    references: [tenants.id]
+  }),
+  patient: one(patients, {
+    fields: [ltvRecords.patientId],
+    references: [patients.id]
+  })
+}));
+
+export const webhookSubscriptionsRelations = relations(webhookSubscriptions, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [webhookSubscriptions.tenantId],
+    references: [tenants.id]
+  })
+}));

@@ -10,6 +10,7 @@ import {
   createUserSchema,
   recordAuditLogSchema,
   recordLifecycleEventSchema,
+  aiClinicalContextResultSchema,
   transitionAppointmentSchema,
   upsertEngagementScoreSchema,
   upsertLtvRecordSchema,
@@ -20,6 +21,7 @@ import {
   type CreateUserInput,
   type RecordAuditLogInput,
   type RecordLifecycleEventInput,
+  type AiClinicalContextResultInput,
   type TransitionAppointmentInput,
   type UpsertEngagementScoreInput,
   type UpsertLtvRecordInput
@@ -257,4 +259,24 @@ export async function upsertLtvRecord(
     }
   }).returning();
   return requireInsertedRow(record, "LTV record");
+}
+
+export async function recordAiClinicalContext(
+  db: CareLoopDb,
+  context: TenantContext,
+  input: AiClinicalContextResultInput
+) {
+  const parsed = aiClinicalContextResultSchema.parse(input);
+  const appointment = await getAppointmentById(db, context, parsed.appointmentId);
+
+  if (!appointment || appointment.patientId !== parsed.patientId) {
+    throw new Error("Tenant-scoped appointment not found.");
+  }
+
+  const [record] = await db.insert(schema.aiClinicalContexts).values({
+    ...parsed,
+    tenantId: context.tenantId
+  }).returning();
+
+  return requireInsertedRow(record, "AI clinical context");
 }

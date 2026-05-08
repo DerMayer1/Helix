@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  aiClinicalContextJobSchema,
   followupJobSchema,
   recoveryJobSchema,
   reminderJobSchema,
@@ -45,6 +46,17 @@ describe("queue payload contracts", () => {
     });
 
     expect(parsed.scheduledFor).toBeInstanceOf(Date);
+  });
+
+  it("validates AI clinical context jobs", () => {
+    const parsed = aiClinicalContextJobSchema.parse({
+      ...base,
+      appointmentId: "00000000-0000-4000-8000-000000000030",
+      patientId: "00000000-0000-4000-8000-000000000020",
+      mode: "pre_consultation"
+    });
+
+    expect(parsed.mode).toBe("pre_consultation");
   });
 
   it("validates webhook jobs with canonical event names", () => {

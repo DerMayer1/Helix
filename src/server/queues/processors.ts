@@ -1,6 +1,7 @@
 import type { Job } from "bullmq";
 import { logger } from "@/server/observability/logger";
 import {
+  aiClinicalContextJobSchema,
   engagementAnalysisJobSchema,
   followupJobSchema,
   realtimeEventJobSchema,
@@ -42,6 +43,12 @@ export async function processEngagementAnalysisJob(job: Job) {
   return { ok: true };
 }
 
+export async function processAiClinicalContextJob(job: Job) {
+  const data = aiClinicalContextJobSchema.parse(job.data);
+  logJobStart(job, "ai.context.generate", data.tenantId, data.correlationId);
+  return { ok: true };
+}
+
 export async function processRealtimeEventJob(job: Job) {
   const data = realtimeEventJobSchema.parse(job.data);
   logJobStart(job, "realtime.publish", data.tenantId, data.correlationId);
@@ -53,4 +60,3 @@ export async function processWebhookJob(job: Job) {
   logJobStart(job, "webhook.dispatch", data.tenantId, data.correlationId);
   return { ok: true };
 }
-

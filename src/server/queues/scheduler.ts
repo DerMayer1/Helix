@@ -1,11 +1,13 @@
 import type { JobsOptions } from "bullmq";
 import {
+  aiClinicalContextJobSchema,
   engagementAnalysisJobSchema,
   followupJobSchema,
   realtimeEventJobSchema,
   recoveryJobSchema,
   reminderJobSchema,
   webhookJobSchema,
+  type AiClinicalContextJobData,
   type EngagementAnalysisJobData,
   type FollowupJobData,
   type RealtimeEventJobData,
@@ -15,6 +17,7 @@ import {
 } from "./contracts";
 import {
   createFollowupJobId,
+  createAiClinicalContextJobId,
   createRecoveryJobId,
   createReminderJobId,
   createWebhookJobId,
@@ -94,6 +97,16 @@ export function scheduleEngagementAnalysisJob(
       parsed.triggerEventName,
       parsed.correlationId
     ])
+  });
+}
+
+export function scheduleAiClinicalContextJob(
+  data: AiClinicalContextJobData,
+  queue: QueueLike<AiClinicalContextJobData> = getQueue(queueNames.aiClinicalContext) as QueueLike<AiClinicalContextJobData>
+) {
+  const parsed = aiClinicalContextJobSchema.parse(data);
+  return scheduleJob(queue, "ai.context.generate", parsed, {
+    jobId: createAiClinicalContextJobId(parsed)
   });
 }
 
