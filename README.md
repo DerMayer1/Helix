@@ -170,6 +170,10 @@ npm run db:generate
 npm run db:migrate
 ```
 
+## Contribution Standard
+
+Use atomic, descriptive commits following Conventional Commits. See `CONTRIBUTING.md` for scopes, examples, review rules, and data-safety requirements.
+
 ## Repository Structure
 
 ```text
