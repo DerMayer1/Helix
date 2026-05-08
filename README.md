@@ -166,9 +166,10 @@ Security posture:
 - Tests, fixtures, logs, docs, screenshots, and public demos must use synthetic data.
 
 Frontend:
-- The dashboard renders a synthetic tenant snapshot from `src/server/fixtures/dashboard.ts`.
-- `GET /api/dashboard/snapshot` exposes the same PHI-free snapshot as an integration contract.
-- It shows lifecycle trace, queue visibility, recovery rate, patient risk, LTV, AI context status, and webhook delivery status.
+- `GET /api/dashboard/snapshot` exposes a PHI-free tenant snapshot as an integration contract.
+- The main application is a single-page operations cockpit with sidebar navigation across Dashboard, Recovery Inbox, Automation Builder, Patients, Physician Briefing, Events, and Settings.
+- It shows lifecycle trace, BullMQ queue visibility, recovery actions, tenant automation rules, patient engagement, LTV delta, AI-safe briefing context, audit events, and webhook delivery status.
+- All visible patient data, identifiers, payloads, screenshots, and examples are synthetic and marked PHI-free.
 - Loading and error boundaries are implemented with PHI-safe messaging.
 
 ## 5. Local setup
