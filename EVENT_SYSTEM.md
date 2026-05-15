@@ -1,6 +1,6 @@
 # Event System - CareLoop
 
-Status: Phase 6 AI clinical context workflow
+Status: Phase 6 AI clinical context workflow, revalidated for CareLoop queue documentation
 Owner: backend architecture
 
 CareLoop is event-driven. Every business state transition emits `state.changed` and may emit a domain-specific event.

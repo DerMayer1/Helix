@@ -1,8 +1,8 @@
-# Helix
+# CareLoop
 
-## 1. What Helix is
+## 1. What CareLoop is
 
-Helix is a multi-tenant healthcare retention orchestration platform. It models patient engagement as an event-driven backend system: appointment booking, reminders, recovery workflows, post-care follow-up, prescription renewal, engagement scoring, LTV tracking, realtime dashboard updates, and tenant-scoped webhook dispatch.
+CareLoop is a multi-tenant healthcare retention orchestration platform. It models patient engagement as an event-driven backend system: appointment booking, reminders, recovery workflows, post-care follow-up, prescription renewal, engagement scoring, LTV tracking, realtime dashboard updates, and tenant-scoped webhook dispatch.
 
 The project is backend-first with a visible operational dashboard. The goal is to prove production-style architecture for healthcare SaaS workflows: tenant isolation, deterministic queues, typed events, auditability, PHI-minimized payloads, and operational lifecycle state.
 
@@ -171,6 +171,36 @@ Frontend:
 - It shows lifecycle trace, BullMQ queue visibility, recovery actions, tenant automation rules, patient engagement, LTV delta, AI-safe briefing context, audit events, and webhook delivery status.
 - All visible patient data, identifiers, payloads, screenshots, and examples are synthetic and marked PHI-free.
 - Loading and error boundaries are implemented with PHI-safe messaging.
+
+## Architecture Rationale
+
+**Why BullMQ over cron jobs**
+Clinic retention workflows are stateful and need retry guarantees.
+A missed reminder or recovery attempt is a lost patient.
+BullMQ gives deterministic job IDs (no duplicates on reschedule),
+configurable backoff, and queue visibility for operational monitoring.
+
+**Why event-driven over direct service calls**
+Each lifecycle event (appointment.booked, consultation.completed, etc.)
+can fan out to multiple consumers: realtime dashboard, webhook dispatch,
+audit log, engagement scoring. Event sourcing keeps these decoupled and
+auditable without tight service dependencies.
+
+**Why tenant context is derived server-side**
+Frontend-provided tenantId is never trusted. Tenant context is resolved
+from the authenticated session server-side. Cross-tenant access is
+treated as a critical defect, not an edge case.
+
+## Test Coverage
+
+Core domain logic is covered with Vitest unit tests:
+
+- `queues/`: job ID determinism, retry contract defaults
+- `domain/`: LTV formula, engagement score calculation
+- `lib/tenant/`: cross-tenant isolation guards
+- `lib/webhooks/`: HMAC signing and PHI-minimized payload contracts
+
+Run with `npm test`.
 
 ## 5. Local setup
 
